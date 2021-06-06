@@ -9,8 +9,8 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>core</module>
-        <module>naming-service-zookeeper</module>
+        <module>rpc</module>
+        <module>register</module>
     </modules>
 
     <properties>
