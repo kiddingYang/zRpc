@@ -5,11 +5,13 @@ import com.gs.register.impl.Config;
 import com.gs.register.impl.ZookeeperRegister;
 import com.gs.rpc.bootstrap.codec.RequestDecode;
 import com.gs.rpc.bootstrap.codec.ResponseEncode;
+import com.gs.rpc.bootstrap.handler.ServerInvokerFactory;
 import com.gs.rpc.bootstrap.handler.ServiceRequestHandler;
 import com.gs.rpc.exception.RpcException;
 import com.gs.rpc.model.Constants;
 import com.gs.rpc.model.meta.ServiceWrapper;
 import com.gs.rpc.serializer.Serializer;
+import com.gs.rpc.util.ValidUtils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -20,7 +22,6 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
-import javax.annotation.Resource;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -29,6 +30,7 @@ public class DefaultServer implements Server {
     // TODO SPI
     private ServiceRegister serviceRegister;
 
+    private Serializer serializer;
 
     private Map<String, ServiceWrapper> providers = new ConcurrentHashMap<>();
 
@@ -40,19 +42,17 @@ public class DefaultServer implements Server {
 
     private volatile Channel channel;
 
-    public DefaultServer(int port) {
+    public DefaultServer(int port, Serializer serializer) {
         serviceRegister = new ZookeeperRegister(Config.ZOOKEEPER_HOST, Config.ZOOKEEPER_PORT,
                 Config.SERIVCE_PATH);
         this.port = port;
+        this.serializer = serializer;
     }
 
     @Override
     public ServiceRegister serviceRegister() {
         return serviceRegister;
     }
-
-    @Resource
-    Serializer serializer;
 
     @Override
     public void start() {
@@ -68,7 +68,8 @@ public class DefaultServer implements Server {
                                 .addLast("request decode", new RequestDecode(Constants.MAX_FRAME_LENGTH, serializer))
                                 .addLast(new LoggingHandler(LogLevel.DEBUG))
                                 .addLast("response encode", new ResponseEncode(serializer))
-                                .addLast("service request handler", new ServiceRequestHandler());
+                                .addLast("service request handler", new ServiceRequestHandler(
+                                        new ServerInvokerFactory(serviceId -> providers.get(serviceId))));
                     }
                 });
 
@@ -91,6 +92,7 @@ public class DefaultServer implements Server {
 
     @Override
     public Server publish(ServiceWrapper... serviceWrappers) {
+        ValidUtils.requiredNotNull(serviceWrappers, "service wrapper");
         for (ServiceWrapper serviceWrapper : serviceWrappers) {
             providers.put(serviceWrapper.getServiceProviderInterfaceClass().getName(), serviceWrapper);
         }

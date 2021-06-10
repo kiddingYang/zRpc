@@ -67,6 +67,16 @@ public class ZookeeperRegister implements ServiceRegister {
         curatorFramework.close();
     }
 
+    @Override
+    public void registerSelf(int port) {
+        ServiceMeta serviceMeta = new ServiceMeta();
+        serviceMeta.setServiceId("aaa");
+        serviceMeta.setServiceName("bbb");
+        serviceMeta.setHost("127.0.0.1");
+        serviceMeta.setPort(port);
+        doRegister(serviceMeta);
+    }
+
     private ServiceInstance<ServiceMeta> convertServiceInstance(ServiceMeta serviceMeta) {
         try {
             return ServiceInstance.<ServiceMeta>builder()

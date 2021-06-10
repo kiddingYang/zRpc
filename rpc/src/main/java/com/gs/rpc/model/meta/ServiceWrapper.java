@@ -17,6 +17,10 @@ public class ServiceWrapper {
 
     private ProviderInterceptor[] providerInterceptors;
 
+    public ServiceWrapper(Class serviceProviderInterfaceClass, Object serviceProvider) {
+        this.serviceProviderInterfaceClass = serviceProviderInterfaceClass;
+        this.serviceProvider = serviceProvider;
+    }
 
     public ServiceWrapper(Class serviceProviderInterfaceClass, Object serviceProvider, Executor executor, ProviderInterceptor[] providerInterceptors) {
         this.serviceProvider = serviceProvider;

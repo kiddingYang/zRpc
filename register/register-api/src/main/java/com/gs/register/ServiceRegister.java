@@ -11,4 +11,6 @@ public interface ServiceRegister {
 
     void close();
 
+    void registerSelf(int port);
+
 }
